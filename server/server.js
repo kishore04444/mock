@@ -2,11 +2,13 @@
  * Mock Interview API - Express server (in-memory store, no MongoDB required)
  * In production, serves the built client from client/dist.
  */
+
 import './loadEnv.js';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 import authRoutes from './routes/authRoutes.js';
 import resumeRoutes from './routes/resumeRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
@@ -19,9 +21,32 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProd = process.env.NODE_ENV === 'production';
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
+/* =========================
+   CORS CONFIG (IMPORTANT)
+   ========================= */
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://shiny-pavlova-7f0817.netlify.app',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+);
+
+// Handle preflight requests
+app.options('*', cors());
+
+/* =========================
+   MIDDLEWARE
+   ========================= */
 app.use(express.json());
 
+/* =========================
+   API ROUTES
+   ========================= */
 app.use('/api/auth', authRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/interview', interviewRoutes);
@@ -31,16 +56,23 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
-// Production: serve built React app
+/* =========================
+   PRODUCTION: SERVE FRONTEND
+   ========================= */
 if (isProd) {
   const distPath = path.join(__dirname, '..', 'client', 'dist');
+
   app.use(express.static(distPath));
+
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
+/* =========================
+   ERROR HANDLER
+   ========================= */
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({
@@ -48,19 +80,27 @@ app.use((err, req, res, next) => {
   });
 });
 
+/* =========================
+   START SERVER
+   ========================= */
 const server = app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT} (in-memory store, no MongoDB required)`);
-  if (isProd) console.log('Serving production build from client/dist');
-  const hasKey = process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.includes('placeholder');
-  console.log(hasKey ? 'OpenAI API key: configured' : 'OpenAI API key: NOT set - using mock data. Add OPENAI_API_KEY in server/.env for real AI.');
+  console.log(`Server running on port ${PORT}`);
+  if (isProd) console.log('Production mode enabled');
+
+  const hasKey =
+    process.env.OPENAI_API_KEY &&
+    !process.env.OPENAI_API_KEY.includes('placeholder');
+
+  console.log(
+    hasKey
+      ? 'OpenAI API key: configured'
+      : 'OpenAI API key: NOT set (using mock data)'
+  );
 });
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`\n*** Port ${PORT} is already in use ***`);
-    console.error('Close the other app using this port, then run again.');
-    console.error('To find what is using it (Windows): netstat -ano | findstr :' + PORT);
-    console.error('To kill by PID: taskkill /PID <pid> /F\n');
+    console.error(`Port ${PORT} is already in use.`);
     process.exit(1);
   }
   throw err;
