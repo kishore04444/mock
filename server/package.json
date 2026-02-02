@@ -1,3 +1,4 @@
+import cors from 'cors';
 {
   "name": "mock-interview-server",
   "version": "1.0.0",
