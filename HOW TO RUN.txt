@@ -1,0 +1,35 @@
+AI MOCK INTERVIEW - How to run on any laptop
+============================================
+
+1. EXTRACT THE FOLDER
+   - If you received mockinter.zip, right-click → Extract All (Windows)
+     or double-click to extract (Mac).
+   - Open the EXTRACTED FOLDER (the one containing "client", "server", package.json).
+   - Do NOT open the .zip file in an editor.
+
+2. INSTALL NODE.JS (if not installed)
+   - Download from https://nodejs.org (LTS version).
+   - Install with default options.
+
+3. INSTALL DEPENDENCIES
+   - Open Command Prompt or PowerShell (or Terminal on Mac).
+   - Go to the project folder, e.g.:
+     cd path\to\mockinter
+   - Run:
+     npm run install:all
+   - Wait until it finishes (no errors).
+
+4. START THE APP
+   - In the same folder, run:
+     npm run dev
+   - You should see "Server running" and "Local: http://localhost:5173".
+
+5. OPEN IN BROWSER
+   - Go to: http://localhost:5173
+   - Sign up with any name, email, and password.
+   - Use the app (Dashboard, Resume, Interview, Profile).
+
+6. STOP THE APP
+   - In the terminal, press Ctrl+C.
+
+No MongoDB or OpenAI key needed. Data is saved in memory (resets when you stop the server).
